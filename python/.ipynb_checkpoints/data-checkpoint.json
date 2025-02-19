@@ -1,0 +1,9 @@
+{
+    "id": [1,2,3],
+    "first": ["val1", "val2", "val3"],
+    "second": {
+        "one":"val",
+        "two":"val",
+        "three":["val"]
+    }
+}
