@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-trap -lp 'echo "Error occurred at line $LINENO: $BASH_COMMAND"' ERR
+trap 'echo "Error occurred at line $LINENO: $BASH_COMMAND"' ERR
 
 # Usage: ./script.sh <owner> <group>
 # Ensure two arguments are provided
@@ -20,7 +20,7 @@ OUTPUT=$(git pull)
 printf "%s\n" "$OUTPUT"
 echo ' '
 
-UPDATED_FILES=$(printf "%s\n" "$OUTPUT" | grep -oE '\s?([0-9a-zA-Z_\-/]+\.\w{1,6})' | sort -u | awk '{$1=$1}1')
+UPDATED_FILES=$(printf "%s\n" "$OUTPUT" | grep -oE '\s?([0-9a-zA-Z_\-\/]+\.\w{1,6})' | sort -u | awk '{$1=$1}1')
 # 1. printf "%s\n" "$OUTPUT"
 # Purpose: Converts the variable $OUTPUT into a newline-separated string.
 # Why: Ensures that any special formatting or spacing in $OUTPUT is standardized into individual lines.
@@ -68,7 +68,11 @@ for FILE in $UPDATED_FILES; do
             sudo chown -R "$OWNER":"$GROUP" "$DIR"
             # Change permissions
             sudo chmod 770 "$DIR"
-            echo "DIRECTORY: $DIR ; Set -Recursive OWNER: $OWNER, -Recursive GROUP: $GROUP, PERMISSIONS: 770"
+            # \e[31m → Red
+            # \e[32m → Green
+            # \e[33m → Yellow
+            # \e[34m → Blue
+            printf "DIRECTORY: \e[32m$DIR\e[0m ; Set -Recursive OWNER: \e[34m$OWNER\e[0m, -Recursive GROUP: \e[34m$GROUP\e[0m, PERMISSIONS: \e[34m770\e[0m"
             # Store directory as key with value 1 (for uniqueness)
             DIRS_CHANGED["$DIR"]=1
         fi
@@ -78,11 +82,11 @@ for FILE in $UPDATED_FILES; do
             if [[ "$FILE" == *.sh ]]; then
                 # Set permissions for .sh files
                 sudo chmod 700 "$FILE"
-                echo "FILE: $FILE ; Set PERMISSIONS: 700"
+                printf "FILE: \e[32m$FILE\e[0m ; Set PERMISSIONS: \e[34m700\e[0m"
             else
                 # Set permissions for other files
                 sudo chmod 600 "$FILE"
-                echo "FILE: $FILE ; Set PERMISSIONS: 600"
+                printf "FILE: \e[32m$FILE\e[0m ; Set PERMISSIONS: \e[34m600\e[0m"
             fi
         fi
     fi
