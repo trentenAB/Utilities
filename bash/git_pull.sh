@@ -1,28 +1,50 @@
 #!/bin/bash
 set -e
 
-trap 'echo "Error occurred at line $LINENO: $BASH_COMMAND"' ERR
+trap -lp 'echo "Error occurred at line $LINENO: $BASH_COMMAND"' ERR
+
 # Usage: ./script.sh <owner> <group>
-
 # Ensure two arguments are provided
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <owner> <group>"
-    exit 1
-fi
+# if [ "$#" -ne 2 ]; then
+#     echo "Usage: $0 <owner> <group>"
+#     exit 1
+# fi
 
-OWNER=$1
-GROUP=$2
+# Set default owner and group if not provided
+OWNER=${1:-test}
+GROUP=${2:-test}
 
 # Run git pull and capture the output
 OUTPUT=$(git pull)
 
 printf "%s\n" "$OUTPUT"
 echo ' '
-# Parse the output for updated directories
-# Extract lines starting with '   ' that indicate file changes
-# FILES=$(cat git_pull_output.txt | grep -oE '\s?([0-9a-zA-Z_\-\/]+\.\w{1,6})' | sort -u | awk '{$1=$1}1')
-#UPDATED_FILES=$(echo "$OUTPUT" | grep -E '^   ' | awk '{print $2}')
-UPDATED_FILES=$(printf "%s\n" "$OUTPUT" | grep -oE '\s?([0-9a-zA-Z_\-\/]+\.\w{1,6})' | sort -u | awk '{$1=$1}1')
+
+UPDATED_FILES=$(printf "%s\n" "$OUTPUT" | grep -oE '\s?([0-9a-zA-Z_\-/]+\.\w{1,6})' | sort -u | awk '{$1=$1}1')
+# 1. printf "%s\n" "$OUTPUT"
+# Purpose: Converts the variable $OUTPUT into a newline-separated string.
+# Why: Ensures that any special formatting or spacing in $OUTPUT is standardized into individual lines.
+# 2. grep -oE '\s?([0-9a-zA-Z_\-/]+\.\w{1,6})'
+# Purpose: Extracts file paths from the git output using a regular expression.
+# Explanation of Regex:
+# \s? → Matches 0 or 1 whitespace characters
+# ([0-9a-zA-Z_\-/]+) → Captures a sequence of characters including digits, letters, underscores, hyphens, and slashes (directory separators).
+# \. → Matches a literal period (dot before the file extension).
+# \w{1,6} → Matches the file extension (1 to 6 word characters, such as .sh, .txt, .js).
+# 3. sort -u
+# Purpose: Sorts the list of file paths alphabetically and removes duplicates.
+# -u Flag: Ensures that only unique lines are included.
+# 4. awk '{$1=$1}1'
+# In awk, $1 represents the first field (the first word) of the current line.
+# By setting $1 to $1 (essentially assigning the value of the first field to itself), 
+# awk triggers a re-evaluation of the entire line. 
+# This forces awk to rebuild the line by concatenating the fields with the default output 
+# field separator (which is a single space).
+# Importantly, this step automatically trims leading and trailing whitespace from the line, 
+# because awk strips out the leading/trailing spaces when reassembling the fields.
+# The last 1 is a shorthand for a true condition in awk. 
+# In awk, any condition that evaluates to true triggers the action following it (or the default action, which is to print the line).
+# So, 1 means "always true," and thus awk will print each modified line.
 
 # Use an associative array to track unique directories
 # -A declares an associative array (key-value pairs)
@@ -36,28 +58,31 @@ for FILE in $UPDATED_FILES; do
     if [ -e "$FILE" ]; then
         # Get the directory of the file
         DIR=$(dirname "$FILE")
-        # Change ownership and group recursively
-        sudo chown -R "$OWNER":"$GROUP" "$DIR"
-        sudo chmod 770 "$DIR"
-	echo "DIRECTORY: $DIR ; Set -Recursive OWNER: $OWNER, GROUP: $GROUP, PERMISSIONS: 770"
-        # Store directory as key with value 1 (for uniqueness)
-        DIRS_CHANGED["$DIR"]=1
+        # Only change permissions if the directory hasn't been processed
+        # ${DIRS_CHANGED[$DIR]} = Accesses the value stored in the associative array DIRS_CHANGED at the key $DIR.
+        # Since DIRS_CHANGED is declared as an associative array (declare -A DIRS_CHANGED), each key represents a directory, and the value is typically used as a flag or indicator.
+        # -z = This is a Bash test operator that checks if a string is empty.
+        # Returns true if the string is empty (i.e., zero-length), and false otherwise.
+        if [ -z "${DIRS_CHANGED[$DIR]}" ]; then
+            # Change ownership and group recursively
+            sudo chown -R "$OWNER":"$GROUP" "$DIR"
+            # Change permissions
+            sudo chmod 770 "$DIR"
+            echo "DIRECTORY: $DIR ; Set -Recursive OWNER: $OWNER, -Recursive GROUP: $GROUP, PERMISSIONS: 770"
+            # Store directory as key with value 1 (for uniqueness)
+            DIRS_CHANGED["$DIR"]=1
+        fi
         
-        # Check if it's a directory
-        if [ -d "$FILE" ]; then
-            # Set permissions for directories
-            sudo chmod 770 "$FILE"
-	    
-        elif [ -f "$FILE" ]; then
+        if [ -f "$FILE" ]; then
             # Check if it's a file ending in .sh
             if [[ "$FILE" == *.sh ]]; then
                 # Set permissions for .sh files
                 sudo chmod 700 "$FILE"
-		echo "FILE: $FILE ; Set PERMISSIONS: 700"
+                echo "FILE: $FILE ; Set PERMISSIONS: 700"
             else
                 # Set permissions for other files
                 sudo chmod 600 "$FILE"
-		echo "FILE: $FILE ; Set PERMISSIONS: 600"
+                echo "FILE: $FILE ; Set PERMISSIONS: 600"
             fi
         fi
     fi
@@ -78,20 +103,12 @@ if [ ${#DIRS_CHANGED[@]} -eq 0 ]; then
 fi
 
 # POTENTIALLY USE THIS TO GET TOP LEVEL OF REPO
-# git rev-parse --show-toplevel
+# TOP_LEVEL=$(git rev-parse --show-toplevel)
+# git config --global --add safe.directory $TOP_LEVEL
 
 # RUN fapolicy
 #
 
-# Explanation of key Bash syntax:
-# - Associative array: declare -A DIRS_CHANGED
 # - ${#DIRS_CHANGED[@]}: Number of elements (keys) in array
 # - ${!DIRS_CHANGED[@]}: All keys in the array
 # - ${DIRS_CHANGED[@]}: All values in the array
-# - [ -e "$FILE" ]: File or directory exists
-# - chown -R: Recursively change ownership and group
-# - [ -d "$FILE" ]: Checks if it's a directory
-# - [ -f "$FILE" ]: Checks if it's a regular file
-# - chmod 770: Sets permissions for directories
-# - chmod 700: Sets permissions for .sh files
-# - chmod 600: Sets permissions for other files

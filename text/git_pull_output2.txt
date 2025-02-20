@@ -1,0 +1,21 @@
+remote: Enumerating objects: 10, done.
+remote: Counting objects: 100% (10/10), done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 6 (delta 2), reused 6 (delta 2), pack-reused 0 (from 0)
+Unpacking objects: 100% (6/6), 1.02 KiB | 1.02 MiB/s, done.
+From github.com:trentenAB/Utilities
+   baf3360..5d9862e  main       -> origin/main
+Updating baf3360..5d9862e
+Fast-forward
+ DxDiag.txt                                      | 2050 ------------------------------------------------------------------------
+ bash/git_pull.sh                                |   27 +-
+ parse_git_pull.sh => bash/parse_git_pull.sh     |    0
+ test/test.sh                                    |    0
+ git_pull_output.txt => text/git_pull_output.txt |    0
+ 5 files changed, 21 insertions(+), 2056 deletions(-)
+ delete mode 100644 DxDiag.txt
+ mode change 100644 => 100755 bash/git_pull.sh
+ rename parse_git_pull.sh => bash/parse_git_pull.sh (100%)
+ mode change 100644 => 100755
+ mode change 100644 => 100755 test/test.sh
+ rename git_pull_output.txt => text/git_pull_output.txt (100%)
