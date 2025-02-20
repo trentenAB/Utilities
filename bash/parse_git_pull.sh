@@ -13,7 +13,6 @@ set -e
 # So, 1 means "always true," and thus awk will print each modified line.
 # NUM_FILES=$(cat git_pull_output.txt |grep -E 'file' | cut -d 'f' -f 1 | awk '{$1=$1}1')
 
-# FILES=$(cat git_pull_output.txt | grep -oE '\s?([0-9a-zA-Z_\-\/]+\.\w{1,6})' | sort -u | awk '{$1=$1}1')
 FILES=$(cat text/output.txt | grep -oE '\s?([0-9a-zA-Z_\-\/]+\.\w{1,6})' | sort -u | awk '{$1=$1}1')
 cat text/output.txt | grep -oE '\s?([0-9a-zA-Z_\-\/]+\.\w{1,6})' | sort -u | awk '{$1=$1}1'
 # cat git_pull_output.txt | grep -oE '[^ ]+$'
