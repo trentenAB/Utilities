@@ -103,21 +103,14 @@ done
 # ${#DIRS_CHANGED[@]} counts the number of keys in the associative array
 if [ ${#DIRS_CHANGED[@]} -eq 0 ]; then
     echo "No directories had permissions changed."
-#else
-    #echo "Directories with permissions changed:"
-    # ${!DIRS_CHANGED[@]} expands to all keys (directories) of the array
-    #for DIR in "${!DIRS_CHANGED[@]}"; do
-        #echo "$DIR"
-    #done
+else
+    echo ''
+    printf "\e[33mRunning fapolicy on \e[31m$TOP_LEVEL\e[33m******************\e[0m\n"
+#############INSERT FAPOLICY SCRIPTS HERE#####################
+
 fi
 
 # git config --global --add safe.directory $TOP_LEVEL
-
-# RUN fapolicy
-#
-echo ''
-printf "\e[33mRunning fapolicy on $TOP_LEVEL\e[0m\n"
-
 
 # - ${#DIRS_CHANGED[@]}: Number of elements (keys) in array
 # - ${!DIRS_CHANGED[@]}: All keys in the array
