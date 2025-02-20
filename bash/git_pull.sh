@@ -16,8 +16,9 @@ GROUP=${2:-test}
 
 # Run git pull and capture the output
 OUTPUT=$(git pull)
-
-printf "%s\n" "$OUTPUT"
+ESC=$(printf '\x1b')
+COLOR=$(printf "%s\n" "$OUTPUT" | sed -E -e "/\|/s/\++/${ESC}[32m&${ESC}[0m/g" -e "/\|/s/\-+/${ESC}[31m&${ESC}[0m/g")
+printf "%s\n" "$COLOR"
 echo ''
 
 # GET TOP LEVEL OF REPO
