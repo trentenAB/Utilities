@@ -18,7 +18,10 @@ GROUP=${2:-test}
 OUTPUT=$(git pull)
 
 printf "%s\n" "$OUTPUT"
-echo ' '
+echo ''
+
+# GET TOP LEVEL OF REPO
+TOP_LEVEL=$(git rev-parse --show-toplevel)
 
 UPDATED_FILES=$(printf "%s\n" "$OUTPUT" | grep -oE '\s?([0-9a-zA-Z_\-\/]+\.\w{1,6})' | sort -u | awk '{$1=$1}1')
 # 1. printf "%s\n" "$OUTPUT"
@@ -50,6 +53,7 @@ UPDATED_FILES=$(printf "%s\n" "$OUTPUT" | grep -oE '\s?([0-9a-zA-Z_\-\/]+\.\w{1,
 # -A declares an associative array (key-value pairs)
 declare -A DIRS_CHANGED
 
+printf "\e[33mPERMISSION UPDATES******************\e[0m\n"
 # Process each updated file
 for FILE in $UPDATED_FILES; do
     # [ -e "$FILE" ] checks if the file or directory exists
@@ -72,7 +76,8 @@ for FILE in $UPDATED_FILES; do
             # \e[32m → Green
             # \e[33m → Yellow
             # \e[34m → Blue
-            printf "DIRECTORY: \e[32m$DIR\e[0m ; Set -Recursive OWNER: \e[34m$OWNER\e[0m, -Recursive GROUP: \e[34m$GROUP\e[0m, PERMISSIONS: \e[34m770\e[0m"
+	    # \e[0m  → Default
+            printf "DIRECTORY: \e[32m$DIR\e[0m ; Set -Recursive OWNER: \e[34m$OWNER\e[0m, -Recursive GROUP: \e[34m$GROUP\e[0m, PERMISSIONS: \e[34m770\e[0m\n"
             # Store directory as key with value 1 (for uniqueness)
             DIRS_CHANGED["$DIR"]=1
         fi
@@ -82,11 +87,11 @@ for FILE in $UPDATED_FILES; do
             if [[ "$FILE" == *.sh ]]; then
                 # Set permissions for .sh files
                 sudo chmod 700 "$FILE"
-                printf "FILE: \e[32m$FILE\e[0m ; Set PERMISSIONS: \e[34m700\e[0m"
+                printf "FILE: \e[32m$FILE\e[0m ; Set PERMISSIONS: \e[34m700\e[0m\n"
             else
                 # Set permissions for other files
                 sudo chmod 600 "$FILE"
-                printf "FILE: \e[32m$FILE\e[0m ; Set PERMISSIONS: \e[34m600\e[0m"
+                printf "FILE: \e[32m$FILE\e[0m ; Set PERMISSIONS: \e[34m600\e[0m\n"
             fi
         fi
     fi
@@ -106,12 +111,13 @@ if [ ${#DIRS_CHANGED[@]} -eq 0 ]; then
     #done
 fi
 
-# POTENTIALLY USE THIS TO GET TOP LEVEL OF REPO
-# TOP_LEVEL=$(git rev-parse --show-toplevel)
 # git config --global --add safe.directory $TOP_LEVEL
 
 # RUN fapolicy
 #
+echo ''
+printf "\e[33mRunning fapolicy on $TOP_LEVEL\e[0m\n"
+
 
 # - ${#DIRS_CHANGED[@]}: Number of elements (keys) in array
 # - ${!DIRS_CHANGED[@]}: All keys in the array
