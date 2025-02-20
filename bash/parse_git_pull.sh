@@ -1,5 +1,4 @@
 set -e
-# # cat git_pull_output.txt |grep -E '\|'
 
 # In awk, $1 represents the first field (the first word) of the current line.
 # By setting $1 to $1 (essentially assigning the value of the first field to itself), 
@@ -15,4 +14,8 @@ set -e
 
 FILES=$(cat text/output.txt | grep -oE '\s?([0-9a-zA-Z_\-\/]+\.\w{1,6})' | sort -u | awk '{$1=$1}1')
 cat text/output.txt | grep -oE '\s?([0-9a-zA-Z_\-\/]+\.\w{1,6})' | sort -u | awk '{$1=$1}1'
-# cat git_pull_output.txt | grep -oE '[^ ]+$'
+
+# adding
+# lines
+# for 
+# testing
