@@ -16,9 +16,13 @@ GROUP=$2
 # Run git pull and capture the output
 OUTPUT=$(git pull)
 
+printf "%s\n" "$OUTPUT"
+echo ' '
 # Parse the output for updated directories
 # Extract lines starting with '   ' that indicate file changes
-UPDATED_FILES=$(echo "$OUTPUT" | grep -E '^   ' | awk '{print $2}')
+# FILES=$(cat git_pull_output.txt | grep -oE '\s?([0-9a-zA-Z_\-\/]+\.\w{1,6})' | sort -u | awk '{$1=$1}1')
+#UPDATED_FILES=$(echo "$OUTPUT" | grep -E '^   ' | awk '{print $2}')
+UPDATED_FILES=$(printf "%s\n" "$OUTPUT" | grep -oE '\s?([0-9a-zA-Z_\-\/]+\.\w{1,6})' | sort -u | awk '{$1=$1}1')
 
 # Use an associative array to track unique directories
 # -A declares an associative array (key-value pairs)
@@ -34,6 +38,8 @@ for FILE in $UPDATED_FILES; do
         DIR=$(dirname "$FILE")
         # Change ownership and group recursively
         sudo chown -R "$OWNER":"$GROUP" "$DIR"
+        sudo chmod 770 "$DIR"
+	echo "DIRECTORY: $DIR ; Set -Recursive OWNER: $OWNER, GROUP: $GROUP, PERMISSIONS: 770"
         # Store directory as key with value 1 (for uniqueness)
         DIRS_CHANGED["$DIR"]=1
         
@@ -41,14 +47,17 @@ for FILE in $UPDATED_FILES; do
         if [ -d "$FILE" ]; then
             # Set permissions for directories
             sudo chmod 770 "$FILE"
+	    
         elif [ -f "$FILE" ]; then
             # Check if it's a file ending in .sh
             if [[ "$FILE" == *.sh ]]; then
                 # Set permissions for .sh files
                 sudo chmod 700 "$FILE"
+		echo "FILE: $FILE ; Set PERMISSIONS: 700"
             else
                 # Set permissions for other files
                 sudo chmod 600 "$FILE"
+		echo "FILE: $FILE ; Set PERMISSIONS: 600"
             fi
         fi
     fi
@@ -60,13 +69,19 @@ done
 # ${#DIRS_CHANGED[@]} counts the number of keys in the associative array
 if [ ${#DIRS_CHANGED[@]} -eq 0 ]; then
     echo "No directories had permissions changed."
-else
-    echo "Directories with permissions changed:"
+#else
+    #echo "Directories with permissions changed:"
     # ${!DIRS_CHANGED[@]} expands to all keys (directories) of the array
-    for DIR in "${!DIRS_CHANGED[@]}"; do
-        echo "$DIR"
-    done
+    #for DIR in "${!DIRS_CHANGED[@]}"; do
+        #echo "$DIR"
+    #done
 fi
+
+# POTENTIALLY USE THIS TO GET TOP LEVEL OF REPO
+# git rev-parse --show-toplevel
+
+# RUN fapolicy
+#
 
 # Explanation of key Bash syntax:
 # - Associative array: declare -A DIRS_CHANGED
